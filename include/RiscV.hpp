@@ -7,12 +7,12 @@
 
 namespace RISCV {
 
-#pragma mark -- Facts about the RISC-V specification this file describes --
+// -- Facts about the RISC-V specification this file describes --
 
 constexpr const char* PrivilegedSpecDate = "20190608";
 constexpr const char* UnprivilegedSpecDate = "20191213";
 
-#pragma mark -- Relevant enums --
+// -- Relevant enums --
 
 enum PrivilegeMode {
     User=0,
@@ -161,7 +161,7 @@ enum CSRAddress {
 };
 
 
-#pragma mark -- Facts about general purpose registers --
+// -- Facts about general purpose registers --
 
 constexpr unsigned int NumRegs = 32;
 
@@ -188,7 +188,7 @@ inline std::string regName(unsigned int regNum, bool flat=false) {
     return registerAbiNames[regNum];
 }
 
-#pragma mark -- Facts about RISC-V extension vectors --
+// -- Facts about RISC-V extension vectors --
 
 constexpr inline __uint32_t stringToExtensions(const char *isa) {
     __uint32_t vec = 0;
@@ -212,7 +212,7 @@ constexpr XlenMode xlenTypeToMode() {
     return XlenMode::None;
 }
 
-#pragma mark -- Facts about RISC-V instruction encodings --
+// -- Facts about RISC-V instruction encodings --
 
 enum OpcodeQuadrant {
     Q0           = 0b00, Q1           = 0b01,
@@ -296,7 +296,7 @@ constexpr unsigned int instructionLength(__uint32_t encodedInstruction) {
     return isCompressed(encodedInstruction) ? 2 : 4; // TODO extended lengths
 }
 
-#pragma mark -- Facts about Configuration & Status Registers --
+// -- Facts about Configuration & Status Registers --
 
 constexpr unsigned int NumCSRs = 0x1000;
 
@@ -518,7 +518,7 @@ inline bool csrIsReadOnly(CSRAddress addr) {
     return (addr & 0b110000000000) == 0b110000000000;
 }
 
-#pragma mark -- Facts about interrupts, exceptions, and traps --
+// -- Facts about interrupts, exceptions, and traps --
 
 struct TrapCSRs {
     CSRAddress status, cause, epc, tvec, tval, ip, ie, ideleg, edeleg;
