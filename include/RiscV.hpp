@@ -500,7 +500,7 @@ constexpr std::array<const char*, NumCSRs> getCSRNameTable() {
     table[CSRAddress::DSCRATCH0] = "dscratch0";
     table[CSRAddress::DSCRATCH1] = "dscratch1";
     return table;
-};
+}
 
 constexpr std::array<const char*, NumCSRs> csrNames = getCSRNameTable();
 
