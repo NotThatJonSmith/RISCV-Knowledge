@@ -35,6 +35,23 @@ enum FloatingPointState {
     Dirty = 3
 };
 
+inline std::string floatingPointStateName(FloatingPointState fpState) {
+    switch (fpState) {
+    case Off:
+        return "Off";
+        break;
+    case Initial:
+        return "Initial";
+        break;
+    case Clean:
+        return "Clean";
+        break;
+    case Dirty:
+        return "Dirty";
+        break;
+    }
+}
+
 enum ExtensionState {
     AllOff = 0,
     NoneDirtyNoneClean = 1,
@@ -42,9 +59,52 @@ enum ExtensionState {
     SomeDirty = 3
 };
 
+inline std::string extensionStateName(ExtensionState extState) {
+    switch (extState) {
+    case AllOff:
+        return "All off";
+        break;
+    case NoneDirtyNoneClean:
+        return "None dirty, none clean";
+        break;
+    case NoneDirtySomeClean:
+        return "None dirty, some clean";
+        break;
+    case SomeDirty:
+        return "Some dirty";
+        break;
+    }
+}
+
 enum PagingMode {
     Bare = 0, Sv32 = 1, Sv39 = 8, Sv48 = 9, Sv57 = 10, Sv64 = 11
 };
+
+inline std::string pagingModeName(RISCV::PagingMode pagingMode) {
+    switch (pagingMode) {
+    case Bare:
+        return "Bare";
+        break;
+    case Sv32:
+        return "Sv32";
+        break;
+    case Sv39:
+        return "Sv39";
+        break;
+    case Sv48:
+        return "Sv48";
+        break;
+    case Sv57:
+        return "Sv57";
+        break;
+    case Sv64:
+        return "Sv64";
+        break;
+    default:
+        return "Unknown";
+        break;
+    }
+}
 
 enum PTEBit {
     V = 0b00000001,
@@ -62,8 +122,28 @@ enum tvecMode {
     Vectored = 1
 };
 
+inline std::string tvecModeName(tvecMode mode) {
+    return mode == Direct ? "Direct" : "Vectored";
+};
+
+enum pmpAddressMode {
+    OFF = 0,
+    TOR = 1,
+    NA4 = 2,
+    NAPOT = 3
+};
+
+enum fpRoundingMode {
+    RNE = 0,
+    RTZ = 1,
+    RDN = 2,
+    RUP = 3,
+    RMM = 4,
+    DYN = 7
+};
+
 enum TrapCause {
-    
+
     NONE = -1,
 
     // Interrupts
@@ -98,66 +178,175 @@ enum TrapCause {
     STORE_AMO_PAGE_FAULT = 15
 };
 
+inline std::string trapName(bool interrupt, TrapCause trapCause) {
+    if (interrupt) {
+        switch (trapCause) {
+        case USER_SOFTWARE_INTERRUPT:
+            return "User software interrupt";
+            break;
+        case SUPERVISOR_SOFTWARE_INTERRUPT:
+            return "User software interrupt";
+            break;
+        case MACHINE_SOFTWARE_INTERRUPT:
+            return "User software interrupt";
+            break;
+        case USER_TIMER_INTERRUPT:
+            return "User software interrupt";
+            break;
+        case SUPERVISOR_TIMER_INTERRUPT:
+            return "User software interrupt";
+            break;
+        case MACHINE_TIMER_INTERRUPT:
+            return "User software interrupt";
+            break;
+        case USER_EXTERNAL_INTERRUPT:
+            return "User software interrupt";
+            break;
+        case SUPERVISOR_EXTERNAL_INTERRUPT:
+            return "User software interrupt";
+            break;
+        case MACHINE_EXTERNAL_INTERRUPT:
+            return "User software interrupt";
+            break;
+        default:
+            return "Unknown interrupt";
+        }
+    }
+    switch (trapCause) {
+    case INSTRUCTION_ADDRESS_MISALIGNED:
+        return "Instruction address misaligned";
+        break;
+    case INSTRUCTION_ACCESS_FAULT:
+        return "Instruction access fault";
+        break;
+    case ILLEGAL_INSTRUCTION:
+        return "Illegal instruction";
+        break;
+    case BREAKPOINT:
+        return "Breakpoint";
+        break;
+    case LOAD_ADDRESS_MISALIGNED:
+        return "Load address misaligned";
+        break;
+    case LOAD_ACCESS_FAULT:
+        return "Load access fault";
+        break;
+    case STORE_AMO_ADDRESS_MISALIGNED:
+        return "Store/AMO address misaligned";
+        break;
+    case STORE_AMO_ACCESS_FAULT:
+        return "Store/AMO access fault";
+        break;
+    case ECALL_FROM_U_MODE:
+        return "ECall from user mode";
+        break;
+    case ECALL_FROM_S_MODE:
+        return "ECall from supervisor mode";
+        break;
+    case ECALL_FROM_M_MODE:
+        return "ECall from machine mode";
+        break;
+    case INSTRUCTION_PAGE_FAULT:
+        return "Instruction page fault";
+        break;
+    case LOAD_PAGE_FAULT:
+        return "Load page fault";
+        break;
+    case STORE_AMO_PAGE_FAULT:
+        return "Store/AMO page fault";
+        break;
+    default:
+        return "Unknown exception";
+    }
+
+}
+
 enum CSRAddress {
-    USTATUS = 0X000, UIE = 0X004, UTVEC = 0X005, USCRATCH = 0X040, UEPC = 0X041,
-    UCAUSE = 0X042, UTVAL = 0X043, UIP = 0X044, FFLAGS = 0X001, FRM = 0X002,
-    FCSR = 0X003, CYCLE = 0XC00, TIME = 0XC01, INSTRET = 0XC02,
-    HPMCOUNTER3 = 0XC03, HPMCOUNTER4 = 0XC04, HPMCOUNTER5 = 0XC05,
-    HPMCOUNTER6 = 0XC06, HPMCOUNTER7 = 0XC07, HPMCOUNTER8 = 0XC08,
-    HPMCOUNTER9 = 0XC09, HPMCOUNTER10 = 0XC0A, HPMCOUNTER11 = 0XC0B,
-    HPMCOUNTER12 = 0XC0C, HPMCOUNTER13 = 0XC0D, HPMCOUNTER14 = 0XC0E,
-    HPMCOUNTER15 = 0XC0F, HPMCOUNTER16 = 0XC10, HPMCOUNTER17 = 0XC11,
-    HPMCOUNTER18 = 0XC12, HPMCOUNTER19 = 0XC13, HPMCOUNTER20 = 0XC14,
-    HPMCOUNTER21 = 0XC15, HPMCOUNTER22 = 0XC16, HPMCOUNTER23 = 0XC17,
-    HPMCOUNTER24 = 0XC18, HPMCOUNTER25 = 0XC19, HPMCOUNTER26 = 0XC1A,
-    HPMCOUNTER27 = 0XC1B, HPMCOUNTER28 = 0XC1C, HPMCOUNTER29 = 0XC1D,
-    HPMCOUNTER30 = 0XC1E, HPMCOUNTER31 = 0XC1F, CYCLEH = 0XC80, TIMEH = 0XC81,
-    INSTRETH = 0XC82, HPMCOUNTER3H = 0XC83, HPMCOUNTER4H = 0XC84,
-    HPMCOUNTER5H = 0XC85, HPMCOUNTER6H = 0XC86, HPMCOUNTER7H = 0XC87,
-    HPMCOUNTER8H = 0XC88, HPMCOUNTER9H = 0XC89, HPMCOUNTER10H = 0XC8A,
-    HPMCOUNTER11H = 0XC8B, HPMCOUNTER12H = 0XC8C, HPMCOUNTER13H = 0XC8D,
-    HPMCOUNTER14H = 0XC8E, HPMCOUNTER15H = 0XC8F, HPMCOUNTER16H = 0XC90,
-    HPMCOUNTER17H = 0XC91, HPMCOUNTER18H = 0XC92, HPMCOUNTER19H = 0XC93,
-    HPMCOUNTER20H = 0XC94, HPMCOUNTER21H = 0XC95, HPMCOUNTER22H = 0XC96,
-    HPMCOUNTER23H = 0XC97, HPMCOUNTER24H = 0XC98, HPMCOUNTER25H = 0XC99,
-    HPMCOUNTER26H = 0XC9A, HPMCOUNTER27H = 0XC9B, HPMCOUNTER28H = 0XC9C,
-    HPMCOUNTER29H = 0XC9D, HPMCOUNTER30H = 0XC9E, HPMCOUNTER31H = 0XC9F,
-    SSTATUS = 0X100, SEDELEG = 0X102, SIDELEG = 0X103, SIE = 0X104,
-    STVEC = 0X105, SCOUNTEREN = 0X106, SSCRATCH = 0X140, SEPC = 0X141,
-    SCAUSE = 0X142, STVAL = 0X143, SIP = 0X144, SATP = 0X180, MVENDORID = 0XF11,
-    MARCHID = 0XF12, MIMPID = 0XF13, MHARTID = 0XF14, MSTATUS = 0X300,
-    MISA = 0X301, MEDELEG = 0X302, MIDELEG = 0X303, MIE = 0X304, MTVEC = 0X305,
-    MCOUNTEREN = 0X306, MSCRATCH = 0X340, MEPC = 0X341, MCAUSE = 0X342,
-    MTVAL = 0X343, MIP = 0X344, PMPCFG0 = 0X3A0, PMPCFG1 = 0X3A1,
-    PMPCFG2 = 0X3A2, PMPCFG3 = 0X3A3, PMPADDR0 = 0X3B0, PMPADDR1 = 0X3B1,
-    PMPADDR2 = 0X3B2, PMPADDR3 = 0X3B3, PMPADDR4 = 0X3B4, PMPADDR5 = 0X3B5,
-    PMPADDR6 = 0X3B6, PMPADDR7 = 0X3B7, PMPADDR8 = 0X3B8, PMPADDR9 = 0X3B9,
-    PMPADDR10 = 0X3BA, PMPADDR11 = 0X3BB, PMPADDR12 = 0X3BC, PMPADDR13 = 0X3BD,
-    PMPADDR14 = 0X3BE, PMPADDR15 = 0X3BF, MCYCLE = 0XB00, MINSTRET = 0XB02,
-    MHPMCOUNTER3 = 0XB03, MHPMCOUNTER4 = 0XB04, MHPMCOUNTER31 = 0XB1F,
-    MCYCLEH = 0XB80, MINSTRETH = 0XB82, MHPMCOUNTER3H = 0XB83,
-    MHPMCOUNTER4H = 0XB84, MHPMCOUNTER5H = 0XB85, MHPMCOUNTER6H = 0XB86,
-    MHPMCOUNTER7H = 0XB87, MHPMCOUNTER8H = 0XB88, MHPMCOUNTER9H = 0XB89,
-    MHPMCOUNTER10H = 0XB8A, MHPMCOUNTER11H = 0XB8B, MHPMCOUNTER12H = 0XB8C,
-    MHPMCOUNTER13H = 0XB8D, MHPMCOUNTER14H = 0XB8E, MHPMCOUNTER15H = 0XB8F,
-    MHPMCOUNTER16H = 0XB90, MHPMCOUNTER17H = 0XB91, MHPMCOUNTER18H = 0XB92,
-    MHPMCOUNTER19H = 0XB93, MHPMCOUNTER20H = 0XB94, MHPMCOUNTER21H = 0XB95,
-    MHPMCOUNTER22H = 0XB96, MHPMCOUNTER23H = 0XB97, MHPMCOUNTER24H = 0XB98,
-    MHPMCOUNTER25H = 0XB99, MHPMCOUNTER26H = 0XB9A, MHPMCOUNTER27H = 0XB9B,
-    MHPMCOUNTER28H = 0XB9C, MHPMCOUNTER29H = 0XB9D, MHPMCOUNTER30H = 0XB9E,
-    MHPMCOUNTER31H = 0XB9F, MCOUNTINHIBIT = 0X320, MHPMEVENT3 = 0X323,
-    MHPMEVENT4 = 0X324, MHPMEVENT5 = 0X325, MHPMEVENT6 = 0X326,
-    MHPMEVENT7 = 0X327, MHPMEVENT8 = 0X328, MHPMEVENT9 = 0X329,
-    MHPMEVENT10 = 0X32A, MHPMEVENT11 = 0X32B, MHPMEVENT12 = 0X32C,
-    MHPMEVENT13 = 0X32D, MHPMEVENT14 = 0X32E, MHPMEVENT15 = 0X32F,
-    MHPMEVENT16 = 0X330, MHPMEVENT17 = 0X331, MHPMEVENT18 = 0X332,
-    MHPMEVENT19 = 0X333, MHPMEVENT20 = 0X334, MHPMEVENT21 = 0X335,
-    MHPMEVENT22 = 0X336, MHPMEVENT23 = 0X337, MHPMEVENT24 = 0X338,
-    MHPMEVENT25 = 0X339, MHPMEVENT26 = 0X33A, MHPMEVENT27 = 0X33B,
-    MHPMEVENT28 = 0X33C, MHPMEVENT29 = 0X33D, MHPMEVENT30 = 0X33E,
-    MHPMEVENT31 = 0X33F, TSELECT = 0X7A0, TDATA1 = 0X7A1, TDATA2 = 0X7A2,
-    TDATA3 = 0X7A3, DCSR = 0X7B0, DPC = 0X7B1, DSCRATCH0 = 0X7B2,
-    DSCRATCH1 = 0X7B3, INVALID_CSR = 0x1000
+
+    USTATUS = 0x000, UIE = 0x004, UTVEC = 0x005, USCRATCH = 0x040, UEPC = 0x041,
+    UCAUSE = 0x042, UTVAL = 0x043, UIP = 0x044,
+
+    FFLAGS = 0x001, FRM = 0x002, FCSR = 0x003,
+
+    CYCLE = 0xC00, TIME = 0xC01, INSTRET = 0xC02,
+    HPMCOUNTER3 = 0xC03, HPMCOUNTER4 = 0xC04, HPMCOUNTER5 = 0xC05,
+    HPMCOUNTER6 = 0xC06, HPMCOUNTER7 = 0xC07, HPMCOUNTER8 = 0xC08,
+    HPMCOUNTER9 = 0xC09, HPMCOUNTER10 = 0xC0A, HPMCOUNTER11 = 0xC0B,
+    HPMCOUNTER12 = 0xC0C, HPMCOUNTER13 = 0xC0D, HPMCOUNTER14 = 0xC0E,
+    HPMCOUNTER15 = 0xC0F, HPMCOUNTER16 = 0xC10, HPMCOUNTER17 = 0xC11,
+    HPMCOUNTER18 = 0xC12, HPMCOUNTER19 = 0xC13, HPMCOUNTER20 = 0xC14,
+    HPMCOUNTER21 = 0xC15, HPMCOUNTER22 = 0xC16, HPMCOUNTER23 = 0xC17,
+    HPMCOUNTER24 = 0xC18, HPMCOUNTER25 = 0xC19, HPMCOUNTER26 = 0xC1A,
+    HPMCOUNTER27 = 0xC1B, HPMCOUNTER28 = 0xC1C, HPMCOUNTER29 = 0xC1D,
+    HPMCOUNTER30 = 0xC1E, HPMCOUNTER31 = 0xC1F,
+
+    CYCLEH = 0xC80, TIMEH = 0xC81, INSTRETH = 0xC82,
+    HPMCOUNTER3H = 0xC83, HPMCOUNTER4H = 0xC84, HPMCOUNTER5H = 0xC85,
+    HPMCOUNTER6H = 0xC86, HPMCOUNTER7H = 0xC87, HPMCOUNTER8H = 0xC88,
+    HPMCOUNTER9H = 0xC89, HPMCOUNTER10H = 0xC8A, HPMCOUNTER11H = 0xC8B,
+    HPMCOUNTER12H = 0xC8C, HPMCOUNTER13H = 0xC8D, HPMCOUNTER14H = 0xC8E,
+    HPMCOUNTER15H = 0xC8F, HPMCOUNTER16H = 0xC90, HPMCOUNTER17H = 0xC91,
+    HPMCOUNTER18H = 0xC92, HPMCOUNTER19H = 0xC93, HPMCOUNTER20H = 0xC94,
+    HPMCOUNTER21H = 0xC95, HPMCOUNTER22H = 0xC96, HPMCOUNTER23H = 0xC97,
+    HPMCOUNTER24H = 0xC98, HPMCOUNTER25H = 0xC99, HPMCOUNTER26H = 0xC9A,
+    HPMCOUNTER27H = 0xC9B, HPMCOUNTER28H = 0xC9C, HPMCOUNTER29H = 0xC9D,
+    HPMCOUNTER30H = 0xC9E, HPMCOUNTER31H = 0xC9F,
+
+    SSTATUS = 0x100, SEDELEG = 0x102, SIDELEG = 0x103, SIE = 0x104,
+    STVEC = 0x105, SCOUNTEREN = 0x106, SSCRATCH = 0x140, SEPC = 0x141,
+    SCAUSE = 0x142, STVAL = 0x143, SIP = 0x144, SATP = 0x180,
+
+    MVENDORID = 0xF11, MARCHID = 0xF12, MIMPID = 0xF13, MHARTID = 0xF14,
+
+    MSTATUS = 0x300, MISA = 0x301, MEDELEG = 0x302, MIDELEG = 0x303,
+    MIE = 0x304, MTVEC = 0x305, MCOUNTEREN = 0x306, MSCRATCH = 0x340,
+    MEPC = 0x341, MCAUSE = 0x342, MTVAL = 0x343, MIP = 0x344,
+
+    PMPCFG0 = 0x3A0, PMPCFG1 = 0x3A1, PMPCFG2 = 0x3A2, PMPCFG3 = 0x3A3,
+    PMPADDR0 = 0x3B0, PMPADDR1 = 0x3B1, PMPADDR2 = 0x3B2, PMPADDR3 = 0x3B3,
+    PMPADDR4 = 0x3B4, PMPADDR5 = 0x3B5, PMPADDR6 = 0x3B6, PMPADDR7 = 0x3B7,
+    PMPADDR8 = 0x3B8, PMPADDR9 = 0x3B9, PMPADDR10 = 0x3BA, PMPADDR11 = 0x3BB,
+    PMPADDR12 = 0x3BC, PMPADDR13 = 0x3BD, PMPADDR14 = 0x3BE, PMPADDR15 = 0x3BF,
+
+    MCYCLE = 0xB00, MINSTRET = 0xB02,
+    MHPMCOUNTER3 = 0xB03, MHPMCOUNTER4 = 0xB04, MHPMCOUNTER5 = 0xB05,
+    MHPMCOUNTER6 = 0xB06, MHPMCOUNTER7 = 0xB07, MHPMCOUNTER8 = 0xB08,
+    MHPMCOUNTER9 = 0xB09, MHPMCOUNTER10 = 0xB0A, MHPMCOUNTER11 = 0xB0B,
+    MHPMCOUNTER12 = 0xB0C, MHPMCOUNTER13 = 0xB0D, MHPMCOUNTER14 = 0xB0E,
+    MHPMCOUNTER15 = 0xB0F, MHPMCOUNTER16 = 0xB10, MHPMCOUNTER17 = 0xB11,
+    MHPMCOUNTER18 = 0xB12, MHPMCOUNTER19 = 0xB13, MHPMCOUNTER20 = 0xB14,
+    MHPMCOUNTER21 = 0xB15, MHPMCOUNTER22 = 0xB16, MHPMCOUNTER23 = 0xB17,
+    MHPMCOUNTER24 = 0xB18, MHPMCOUNTER25 = 0xB19, MHPMCOUNTER26 = 0xB1A,
+    MHPMCOUNTER27 = 0xB1B, MHPMCOUNTER28 = 0xB1C, MHPMCOUNTER29 = 0xB1D,
+    MHPMCOUNTER30 = 0xB1E, MHPMCOUNTER31 = 0xB1F,
+
+    MCYCLEH = 0xB80, MINSTRETH = 0xB82,
+    MHPMCOUNTER3H = 0xB83, MHPMCOUNTER4H = 0xB84, MHPMCOUNTER5H = 0xB85,
+    MHPMCOUNTER6H = 0xB86, MHPMCOUNTER7H = 0xB87, MHPMCOUNTER8H = 0xB88,
+    MHPMCOUNTER9H = 0xB89, MHPMCOUNTER10H = 0xB8A, MHPMCOUNTER11H = 0xB8B,
+    MHPMCOUNTER12H = 0xB8C, MHPMCOUNTER13H = 0xB8D, MHPMCOUNTER14H = 0xB8E,
+    MHPMCOUNTER15H = 0xB8F, MHPMCOUNTER16H = 0xB90, MHPMCOUNTER17H = 0xB91,
+    MHPMCOUNTER18H = 0xB92, MHPMCOUNTER19H = 0xB93, MHPMCOUNTER20H = 0xB94,
+    MHPMCOUNTER21H = 0xB95, MHPMCOUNTER22H = 0xB96, MHPMCOUNTER23H = 0xB97,
+    MHPMCOUNTER24H = 0xB98, MHPMCOUNTER25H = 0xB99, MHPMCOUNTER26H = 0xB9A,
+    MHPMCOUNTER27H = 0xB9B, MHPMCOUNTER28H = 0xB9C, MHPMCOUNTER29H = 0xB9D,
+    MHPMCOUNTER30H = 0xB9E, MHPMCOUNTER31H = 0xB9F,
+
+    MCOUNTINHIBIT = 0x320,
+    MHPMEVENT3 = 0x323, MHPMEVENT4 = 0x324, MHPMEVENT5 = 0x325,
+    MHPMEVENT6 = 0x326, MHPMEVENT7 = 0x327, MHPMEVENT8 = 0x328,
+    MHPMEVENT9 = 0x329, MHPMEVENT10 = 0x32A, MHPMEVENT11 = 0x32B,
+    MHPMEVENT12 = 0x32C, MHPMEVENT13 = 0x32D, MHPMEVENT14 = 0x32E,
+    MHPMEVENT15 = 0x32F, MHPMEVENT16 = 0x330, MHPMEVENT17 = 0x331,
+    MHPMEVENT18 = 0x332, MHPMEVENT19 = 0x333, MHPMEVENT20 = 0x334,
+    MHPMEVENT21 = 0x335, MHPMEVENT22 = 0x336, MHPMEVENT23 = 0x337,
+    MHPMEVENT24 = 0x338, MHPMEVENT25 = 0x339, MHPMEVENT26 = 0x33A,
+    MHPMEVENT27 = 0x33B, MHPMEVENT28 = 0x33C, MHPMEVENT29 = 0x33D,
+    MHPMEVENT30 = 0x33E, MHPMEVENT31 = 0x33F,
+
+    TSELECT = 0x7A0, TDATA1 = 0x7A1, TDATA2 = 0x7A2, TDATA3 = 0x7A3,
+    DCSR = 0x7B0, DPC = 0x7B1, DSCRATCH0 = 0x7B2, DSCRATCH1 = 0x7B3,
+    INVALID_CSR = 0x1000
 };
 
 
@@ -197,6 +386,17 @@ constexpr inline __uint32_t stringToExtensions(const char *isa) {
     return vec;
 }
 
+inline std::string extensionsToString(__uint32_t extensions) {
+    // TODO this is stupid but I'm tired... make it less stupid
+    char buf[33];
+    int bufIdx = 0;
+    for (unsigned int i = 0; i < 32; i++)
+        if (extensions & (1<<i))
+            buf[bufIdx++] = 'a'+i;
+    buf[bufIdx] = 0;
+    return std::string(buf);
+}
+
 constexpr inline bool vectorHasExtension(__uint32_t vector, char extension) {
     return vector & (1 <<  (extension - 'A'));
 }
@@ -210,6 +410,22 @@ constexpr XlenMode xlenTypeToMode() {
     if (std::is_same<XLEN_t, __uint128_t>())
         return XlenMode::XL128;
     return XlenMode::None;
+}
+
+inline std::string xlenModeName(XlenMode xlenMode) {
+    if (xlenMode == RISCV::XlenMode::XL32)
+        return "32";
+    if (xlenMode == RISCV::XlenMode::XL64)
+        return "64";
+    return "128";
+}
+
+inline std::string privilegeModeName(PrivilegeMode privilegeMode) {
+    if (privilegeMode == RISCV::PrivilegeMode::Machine)
+        return "Machine";
+    if (privilegeMode == RISCV::PrivilegeMode::Supervisor)
+        return "Supervisor";
+    return "User";
 }
 
 // -- Facts about RISC-V instruction encodings --
@@ -254,7 +470,7 @@ enum MinorOpcode {
     SB = 0, SH = 1, SW = 2,
 
     // SYSTEM
-    PRIV = 0, CSRRW = 1, CSRRS = 2, CSRRC = 3, CSRRWI = 5, CSRRSI = 6, CSRRCI = 7, 
+    PRIV = 0, CSRRW = 1, CSRRS = 2, CSRRC = 3, CSRRWI = 5, CSRRSI = 6, CSRRCI = 7,
 
     // MISC-MEM
     FENCE = 0, FENCE_I = 1,
@@ -602,6 +818,16 @@ constexpr __uint32_t tvmMask  = 0b00100000000000000000000;
 constexpr __uint32_t twMask   = 0b01000000000000000000000;
 constexpr __uint32_t tsrMask  = 0b10000000000000000000000;
 
+constexpr __uint32_t usiMask = 0b0000000000001;
+constexpr __uint32_t ssiMask = 0b0000000000010;
+constexpr __uint32_t msiMask = 0b0000000001000;
+constexpr __uint32_t utiMask = 0b0000000010000;
+constexpr __uint32_t stiMask = 0b0000000100000;
+constexpr __uint32_t mtiMask = 0b0000010000000;
+constexpr __uint32_t ueiMask = 0b0000100000000;
+constexpr __uint32_t seiMask = 0b0001000000000;
+constexpr __uint32_t meiMask = 0b0100000000000;
+
 constexpr __uint32_t  sdMask32  = 0x80000000;
 constexpr __uint64_t  sdMask64  = 0x8000000000000000;
 // constexpr __uint128_t sdMask128 = 0x80000000000000000000000000000000;
@@ -666,5 +892,58 @@ TrapCause highestPriorityInterrupt(XLEN_t interruptsToService) {
         return RISCV::TrapCause::NONE;
     }
 }
+
+// TODO comment for what this section of the spec-knowledge is. In general I need to sort this doc...
+
+struct misaReg {
+    RISCV::XlenMode mxlen;
+    __uint32_t extensions;
+};
+
+struct mstatusReg {
+    bool uie, sie, mie, upie, spie, mpie;
+    RISCV::PrivilegeMode spp, mpp;
+    RISCV::FloatingPointState fs;
+    RISCV::ExtensionState xs;
+    bool mprv, sum, mxr, tvm, tw, tsr;
+    RISCV::XlenMode sxl, uxl;
+    bool sd;
+};
+
+struct interruptReg {
+    bool usi, ssi, msi, uti, sti, mti, uei, sei, mei;
+};
+
+template<typename XLEN_t>
+struct tvecReg {
+    XLEN_t base;
+    RISCV::tvecMode mode;
+};
+
+template<typename XLEN_t>
+struct causeReg {
+    bool interrupt;
+    TrapCause exceptionCode;
+};
+
+template<typename XLEN_t>
+struct satpReg {
+    RISCV::PagingMode pagingMode;
+    XLEN_t ppn;
+    XLEN_t asid;
+};
+
+struct fcsrReg {
+    RISCV::fpRoundingMode frm;
+    struct {
+        bool nx, uf, of, dz, nv;
+    } fflags;
+};
+
+struct pmpEntry {
+    bool r, w, x, locked;
+    RISCV::pmpAddressMode aMode;
+    __uint64_t address;
+} pmpentry[16];
 
 } // namespace RISCV
