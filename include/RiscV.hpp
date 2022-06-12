@@ -49,6 +49,9 @@ inline std::string floatingPointStateName(FloatingPointState fpState) {
     case Dirty:
         return "Dirty";
         break;
+    default:
+        return "Nonsense FP state!";
+        break;
     }
 }
 
@@ -72,6 +75,9 @@ inline std::string extensionStateName(ExtensionState extState) {
         break;
     case SomeDirty:
         return "Some dirty";
+        break;
+    default:
+        return "Nonsense extension state!";
         break;
     }
 }
@@ -834,7 +840,6 @@ constexpr __uint64_t  sdMask64  = 0x8000000000000000;
 
 constexpr __uint64_t uxlMask = 0x300000000; constexpr __uint32_t uxlShift = 32;
 constexpr __uint64_t sxlMask = 0xC00000000; constexpr __uint32_t sxlShift = 34;
-// constexpr __uint64_t hxlMask = 0x3000000000; << 32; constexpr __uint32_t hxlShift = 36;
 
 template<typename XLEN_t>
 PrivilegeMode DestinedPrivilegeForCause(RISCV::TrapCause cause, XLEN_t mdeleg, XLEN_t sdeleg, __uint32_t extensions) {
