@@ -12,12 +12,15 @@ namespace RISCV {
 constexpr const char* PrivilegedSpecDate = "20190608";
 constexpr const char* UnprivilegedSpecDate = "20191213";
 
+// -- Very generic ISA facts --
+
+constexpr unsigned int NumRegs = 32;
+
 // -- Relevant enums --
 
 enum PrivilegeMode {
     User=0,
     Supervisor=1,
-    Hypervisor=2,
     Machine=3
 };
 
@@ -35,26 +38,6 @@ enum FloatingPointState {
     Dirty = 3
 };
 
-inline std::string floatingPointStateName(FloatingPointState fpState) {
-    switch (fpState) {
-    case Off:
-        return "Off";
-        break;
-    case Initial:
-        return "Initial";
-        break;
-    case Clean:
-        return "Clean";
-        break;
-    case Dirty:
-        return "Dirty";
-        break;
-    default:
-        return "Nonsense FP state!";
-        break;
-    }
-}
-
 enum ExtensionState {
     AllOff = 0,
     NoneDirtyNoneClean = 1,
@@ -62,55 +45,9 @@ enum ExtensionState {
     SomeDirty = 3
 };
 
-inline std::string extensionStateName(ExtensionState extState) {
-    switch (extState) {
-    case AllOff:
-        return "All off";
-        break;
-    case NoneDirtyNoneClean:
-        return "None dirty, none clean";
-        break;
-    case NoneDirtySomeClean:
-        return "None dirty, some clean";
-        break;
-    case SomeDirty:
-        return "Some dirty";
-        break;
-    default:
-        return "Nonsense extension state!";
-        break;
-    }
-}
-
 enum PagingMode {
     Bare = 0, Sv32 = 1, Sv39 = 8, Sv48 = 9, Sv57 = 10, Sv64 = 11
 };
-
-inline std::string pagingModeName(RISCV::PagingMode pagingMode) {
-    switch (pagingMode) {
-    case Bare:
-        return "Bare";
-        break;
-    case Sv32:
-        return "Sv32";
-        break;
-    case Sv39:
-        return "Sv39";
-        break;
-    case Sv48:
-        return "Sv48";
-        break;
-    case Sv57:
-        return "Sv57";
-        break;
-    case Sv64:
-        return "Sv64";
-        break;
-    default:
-        return "Unknown";
-        break;
-    }
-}
 
 enum PTEBit {
     V = 0b00000001,
@@ -126,10 +63,6 @@ enum PTEBit {
 enum tvecMode {
     Direct = 0,
     Vectored = 1
-};
-
-inline std::string tvecModeName(tvecMode mode) {
-    return mode == Direct ? "Direct" : "Vectored";
 };
 
 enum pmpAddressMode {
@@ -155,15 +88,12 @@ enum TrapCause {
     // Interrupts
     USER_SOFTWARE_INTERRUPT = 0,
     SUPERVISOR_SOFTWARE_INTERRUPT = 1,
-    // HYPERVISOR_SOFTWARE_INTERRUPT = 2,
     MACHINE_SOFTWARE_INTERRUPT = 3,
     USER_TIMER_INTERRUPT = 4,
     SUPERVISOR_TIMER_INTERRUPT = 5,
-    // HYPERVISOR_TIMER_INTERRUPT = 6,
     MACHINE_TIMER_INTERRUPT = 7,
     USER_EXTERNAL_INTERRUPT = 8,
     SUPERVISOR_EXTERNAL_INTERRUPT = 9,
-    // HYPERVISOR_EXTERNAL_INTERRUPT = 10,
     MACHINE_EXTERNAL_INTERRUPT = 11,
 
     // Exceptions
@@ -183,89 +113,6 @@ enum TrapCause {
     LOAD_PAGE_FAULT = 13,
     STORE_AMO_PAGE_FAULT = 15
 };
-
-inline std::string trapName(bool interrupt, TrapCause trapCause) {
-    if (interrupt) {
-        switch (trapCause) {
-        case USER_SOFTWARE_INTERRUPT:
-            return "User software interrupt";
-            break;
-        case SUPERVISOR_SOFTWARE_INTERRUPT:
-            return "User software interrupt";
-            break;
-        case MACHINE_SOFTWARE_INTERRUPT:
-            return "User software interrupt";
-            break;
-        case USER_TIMER_INTERRUPT:
-            return "User software interrupt";
-            break;
-        case SUPERVISOR_TIMER_INTERRUPT:
-            return "User software interrupt";
-            break;
-        case MACHINE_TIMER_INTERRUPT:
-            return "User software interrupt";
-            break;
-        case USER_EXTERNAL_INTERRUPT:
-            return "User software interrupt";
-            break;
-        case SUPERVISOR_EXTERNAL_INTERRUPT:
-            return "User software interrupt";
-            break;
-        case MACHINE_EXTERNAL_INTERRUPT:
-            return "User software interrupt";
-            break;
-        default:
-            return "Unknown interrupt";
-        }
-    }
-    switch (trapCause) {
-    case INSTRUCTION_ADDRESS_MISALIGNED:
-        return "Instruction address misaligned";
-        break;
-    case INSTRUCTION_ACCESS_FAULT:
-        return "Instruction access fault";
-        break;
-    case ILLEGAL_INSTRUCTION:
-        return "Illegal instruction";
-        break;
-    case BREAKPOINT:
-        return "Breakpoint";
-        break;
-    case LOAD_ADDRESS_MISALIGNED:
-        return "Load address misaligned";
-        break;
-    case LOAD_ACCESS_FAULT:
-        return "Load access fault";
-        break;
-    case STORE_AMO_ADDRESS_MISALIGNED:
-        return "Store/AMO address misaligned";
-        break;
-    case STORE_AMO_ACCESS_FAULT:
-        return "Store/AMO access fault";
-        break;
-    case ECALL_FROM_U_MODE:
-        return "ECall from user mode";
-        break;
-    case ECALL_FROM_S_MODE:
-        return "ECall from supervisor mode";
-        break;
-    case ECALL_FROM_M_MODE:
-        return "ECall from machine mode";
-        break;
-    case INSTRUCTION_PAGE_FAULT:
-        return "Instruction page fault";
-        break;
-    case LOAD_PAGE_FAULT:
-        return "Load page fault";
-        break;
-    case STORE_AMO_PAGE_FAULT:
-        return "Store/AMO page fault";
-        break;
-    default:
-        return "Unknown exception";
-    }
-
-}
 
 enum CSRAddress {
 
@@ -355,10 +202,176 @@ enum CSRAddress {
     INVALID_CSR = 0x1000
 };
 
+// -- String names from enum values --
 
-// -- Facts about general purpose registers --
+inline std::string floatingPointStateName(FloatingPointState fpState) {
+    switch (fpState) {
+    case Off:
+        return "Off";
+        break;
+    case Initial:
+        return "Initial";
+        break;
+    case Clean:
+        return "Clean";
+        break;
+    case Dirty:
+        return "Dirty";
+        break;
+    default:
+        return "Nonsense FP state!";
+        break;
+    }
+}
 
-constexpr unsigned int NumRegs = 32;
+inline std::string extensionStateName(ExtensionState extState) {
+    switch (extState) {
+    case AllOff:
+        return "All off";
+        break;
+    case NoneDirtyNoneClean:
+        return "None dirty, none clean";
+        break;
+    case NoneDirtySomeClean:
+        return "None dirty, some clean";
+        break;
+    case SomeDirty:
+        return "Some dirty";
+        break;
+    default:
+        return "Nonsense extension state!";
+        break;
+    }
+}
+
+inline std::string pagingModeName(PagingMode pagingMode) {
+    switch (pagingMode) {
+    case Bare:
+        return "Bare";
+        break;
+    case Sv32:
+        return "Sv32";
+        break;
+    case Sv39:
+        return "Sv39";
+        break;
+    case Sv48:
+        return "Sv48";
+        break;
+    case Sv57:
+        return "Sv57";
+        break;
+    case Sv64:
+        return "Sv64";
+        break;
+    default:
+        return "Unknown";
+        break;
+    }
+}
+
+inline std::string tvecModeName(tvecMode mode) {
+    return mode == Direct ? "Direct" : "Vectored";
+};
+
+inline std::string trapName(bool interrupt, TrapCause trapCause) {
+    if (interrupt) {
+        switch (trapCause) {
+        case USER_SOFTWARE_INTERRUPT:
+            return "User software interrupt";
+            break;
+        case SUPERVISOR_SOFTWARE_INTERRUPT:
+            return "User software interrupt";
+            break;
+        case MACHINE_SOFTWARE_INTERRUPT:
+            return "User software interrupt";
+            break;
+        case USER_TIMER_INTERRUPT:
+            return "User software interrupt";
+            break;
+        case SUPERVISOR_TIMER_INTERRUPT:
+            return "User software interrupt";
+            break;
+        case MACHINE_TIMER_INTERRUPT:
+            return "User software interrupt";
+            break;
+        case USER_EXTERNAL_INTERRUPT:
+            return "User software interrupt";
+            break;
+        case SUPERVISOR_EXTERNAL_INTERRUPT:
+            return "User software interrupt";
+            break;
+        case MACHINE_EXTERNAL_INTERRUPT:
+            return "User software interrupt";
+            break;
+        default:
+            return "Unknown interrupt";
+        }
+    }
+    switch (trapCause) {
+    case INSTRUCTION_ADDRESS_MISALIGNED:
+        return "Instruction address misaligned";
+        break;
+    case INSTRUCTION_ACCESS_FAULT:
+        return "Instruction access fault";
+        break;
+    case ILLEGAL_INSTRUCTION:
+        return "Illegal instruction";
+        break;
+    case BREAKPOINT:
+        return "Breakpoint";
+        break;
+    case LOAD_ADDRESS_MISALIGNED:
+        return "Load address misaligned";
+        break;
+    case LOAD_ACCESS_FAULT:
+        return "Load access fault";
+        break;
+    case STORE_AMO_ADDRESS_MISALIGNED:
+        return "Store/AMO address misaligned";
+        break;
+    case STORE_AMO_ACCESS_FAULT:
+        return "Store/AMO access fault";
+        break;
+    case ECALL_FROM_U_MODE:
+        return "ECall from user mode";
+        break;
+    case ECALL_FROM_S_MODE:
+        return "ECall from supervisor mode";
+        break;
+    case ECALL_FROM_M_MODE:
+        return "ECall from machine mode";
+        break;
+    case INSTRUCTION_PAGE_FAULT:
+        return "Instruction page fault";
+        break;
+    case LOAD_PAGE_FAULT:
+        return "Load page fault";
+        break;
+    case STORE_AMO_PAGE_FAULT:
+        return "Store/AMO page fault";
+        break;
+    default:
+        return "Unknown exception";
+    }
+
+}
+
+inline std::string xlenModeName(XlenMode xlenMode) {
+    if (xlenMode == XlenMode::XL32)
+        return "32";
+    if (xlenMode == XlenMode::XL64)
+        return "64";
+    return "128";
+}
+
+inline std::string privilegeModeName(PrivilegeMode privilegeMode) {
+    if (privilegeMode == PrivilegeMode::Machine)
+        return "Machine";
+    if (privilegeMode == PrivilegeMode::Supervisor)
+        return "Supervisor";
+    return "User";
+}
 
 constexpr std::array<const char*, NumRegs> registerAbiNames = {
     "zero", "ra", "sp", "gp", "tp",
@@ -403,6 +416,7 @@ inline std::string extensionsToString(__uint32_t extensions) {
     return std::string(buf);
 }
 
+// TODO case-insensitive please
 constexpr inline bool vectorHasExtension(__uint32_t vector, char extension) {
     return vector & (1 <<  (extension - 'A'));
 }
@@ -416,22 +430,6 @@ constexpr XlenMode xlenTypeToMode() {
     if (std::is_same<XLEN_t, __uint128_t>())
         return XlenMode::XL128;
     return XlenMode::None;
-}
-
-inline std::string xlenModeName(XlenMode xlenMode) {
-    if (xlenMode == RISCV::XlenMode::XL32)
-        return "32";
-    if (xlenMode == RISCV::XlenMode::XL64)
-        return "64";
-    return "128";
-}
-
-inline std::string privilegeModeName(PrivilegeMode privilegeMode) {
-    if (privilegeMode == RISCV::PrivilegeMode::Machine)
-        return "Machine";
-    if (privilegeMode == RISCV::PrivilegeMode::Supervisor)
-        return "Supervisor";
-    return "User";
 }
 
 // -- Facts about RISC-V instruction encodings --
@@ -742,107 +740,24 @@ inline bool csrIsReadOnly(CSRAddress addr) {
 
 // -- Facts about interrupts, exceptions, and traps --
 
-struct TrapCSRs {
-    CSRAddress status, cause, epc, tvec, tval, ip, ie, ideleg, edeleg;
-};
-
-constexpr TrapCSRs MachineTrapCSRs = {
-    CSRAddress::MSTATUS,
-    CSRAddress::MCAUSE,
-    CSRAddress::MEPC,
-    CSRAddress::MTVEC,
-    CSRAddress::MTVAL,
-    CSRAddress::MIP,
-    CSRAddress::MIE,
-    CSRAddress::MIDELEG, // TODO what if no S/U modes?
-    CSRAddress::MEDELEG  // TODO what if no S/U modes?
-};
-
-constexpr TrapCSRs HypervisorTrapCSRs = {
-    CSRAddress::INVALID_CSR,
-    CSRAddress::INVALID_CSR,
-    CSRAddress::INVALID_CSR,
-    CSRAddress::INVALID_CSR,
-    CSRAddress::INVALID_CSR,
-    CSRAddress::INVALID_CSR,
-    CSRAddress::INVALID_CSR,
-    CSRAddress::INVALID_CSR,
-    CSRAddress::INVALID_CSR
-};
-
-constexpr TrapCSRs SupervisorTrapCSRs = {
-    CSRAddress::SSTATUS,
-    CSRAddress::SCAUSE,
-    CSRAddress::SEPC,
-    CSRAddress::STVEC,
-    CSRAddress::STVAL,
-    CSRAddress::SIP,
-    CSRAddress::SIE,
-    CSRAddress::SIDELEG, // What if no N extension for U mode? Or no U mode?
-    CSRAddress::SEDELEG  // What if no N extension for U mode? Or no U mode?
-};
-
-constexpr TrapCSRs UserTrapCSRs = {
-    CSRAddress::USTATUS,
-    CSRAddress::UCAUSE,
-    CSRAddress::UEPC,
-    CSRAddress::UTVEC,
-    CSRAddress::UTVAL,
-    CSRAddress::UIP,
-    CSRAddress::UIE,
-    CSRAddress::INVALID_CSR, // CSRAddress::UIDELEG does not exist
-    CSRAddress::INVALID_CSR  // CSRAddress::UEDELEG does not exist
-};
-
-constexpr TrapCSRs trapCSRsForPrivilege[4] = {
-    UserTrapCSRs,
-    SupervisorTrapCSRs,
-    HypervisorTrapCSRs,
-    MachineTrapCSRs
-};
-
+// TODO move to tvec
 constexpr unsigned int tvecModeMask = 0x00000003;
 constexpr unsigned int tvecBaseMask = 0xfffffffc;
 
-constexpr __uint32_t uieMask  = 0b00000000000000000000001;
-constexpr __uint32_t sieMask  = 0b00000000000000000000010;
-constexpr __uint32_t hieMask  = 0b00000000000000000000100;
-constexpr __uint32_t mieMask  = 0b00000000000000000001000;
-constexpr __uint32_t upieMask = 0b00000000000000000010000;
-constexpr __uint32_t spieMask = 0b00000000000000000100000;
-constexpr __uint32_t hpieMask = 0b00000000000000001000000;
-constexpr __uint32_t mpieMask = 0b00000000000000010000000;
-constexpr __uint32_t sppMask  = 0b00000000000000100000000; constexpr __uint32_t sppShift = 8;
-constexpr __uint32_t hppMask  = 0b00000000000011000000000; constexpr __uint32_t hppShift = 9;
-constexpr __uint32_t mppMask  = 0b00000000001100000000000; constexpr __uint32_t mppShift = 11;
-constexpr __uint32_t fsMask   = 0b00000000110000000000000; constexpr __uint32_t fsShift  = 13;
-constexpr __uint32_t xsMask   = 0b00000011000000000000000; constexpr __uint32_t xsShift  = 15;
-constexpr __uint32_t mprvMask = 0b00000100000000000000000;
-constexpr __uint32_t sumMask  = 0b00001000000000000000000;
-constexpr __uint32_t mxrMask  = 0b00010000000000000000000;
-constexpr __uint32_t tvmMask  = 0b00100000000000000000000;
-constexpr __uint32_t twMask   = 0b01000000000000000000000;
-constexpr __uint32_t tsrMask  = 0b10000000000000000000000;
-
-constexpr __uint32_t usiMask = 0b0000000000001;
-constexpr __uint32_t ssiMask = 0b0000000000010;
-constexpr __uint32_t msiMask = 0b0000000001000;
-constexpr __uint32_t utiMask = 0b0000000010000;
-constexpr __uint32_t stiMask = 0b0000000100000;
-constexpr __uint32_t mtiMask = 0b0000010000000;
-constexpr __uint32_t ueiMask = 0b0000100000000;
-constexpr __uint32_t seiMask = 0b0001000000000;
-constexpr __uint32_t meiMask = 0b0100000000000;
-
-constexpr __uint32_t  sdMask32  = 0x80000000;
-constexpr __uint64_t  sdMask64  = 0x8000000000000000;
-// constexpr __uint128_t sdMask128 = 0x80000000000000000000000000000000;
-
-constexpr __uint64_t uxlMask = 0x300000000; constexpr __uint32_t uxlShift = 32;
-constexpr __uint64_t sxlMask = 0xC00000000; constexpr __uint32_t sxlShift = 34;
+// TODO move to interruptReg after making m/s,e/ideleg interruptReg...
+// ugh, crap, the exceptions aren't ireg.
+constexpr static __uint32_t usiMask = 0b0000000000001;
+constexpr static __uint32_t ssiMask = 0b0000000000010;
+constexpr static __uint32_t msiMask = 0b0000000001000;
+constexpr static __uint32_t utiMask = 0b0000000010000;
+constexpr static __uint32_t stiMask = 0b0000000100000;
+constexpr static __uint32_t mtiMask = 0b0000010000000;
+constexpr static __uint32_t ueiMask = 0b0000100000000;
+constexpr static __uint32_t seiMask = 0b0001000000000;
+constexpr static __uint32_t meiMask = 0b0100000000000;
 
 template<typename XLEN_t>
-PrivilegeMode DestinedPrivilegeForCause(RISCV::TrapCause cause, XLEN_t mdeleg, XLEN_t sdeleg, __uint32_t extensions) {
+PrivilegeMode DestinedPrivilegeForCause(TrapCause cause, XLEN_t mdeleg, XLEN_t sdeleg, __uint32_t extensions) {
 
     XLEN_t causeMask = 1 << cause;
 
@@ -874,80 +789,356 @@ PrivilegeMode DestinedPrivilegeForCause(RISCV::TrapCause cause, XLEN_t mdeleg, X
 template<typename XLEN_t>
 TrapCause highestPriorityInterrupt(XLEN_t interruptsToService) {
     // The order in the spec is: MEI MSI MTI SEI SSI STI UEI USI UTI
-    if (interruptsToService & (1 << RISCV::TrapCause::MACHINE_EXTERNAL_INTERRUPT)) {
-        return RISCV::TrapCause::MACHINE_EXTERNAL_INTERRUPT;
-    } else if (interruptsToService & (1 << RISCV::TrapCause::MACHINE_SOFTWARE_INTERRUPT)) {
-        return RISCV::TrapCause::MACHINE_SOFTWARE_INTERRUPT;
-    } else if (interruptsToService & (1 << RISCV::TrapCause::MACHINE_TIMER_INTERRUPT)) {
-        return RISCV::TrapCause::MACHINE_TIMER_INTERRUPT;
-    } else if (interruptsToService & (1 << RISCV::TrapCause::SUPERVISOR_EXTERNAL_INTERRUPT)) {
-        return RISCV::TrapCause::SUPERVISOR_EXTERNAL_INTERRUPT;
-    } else if (interruptsToService & (1 << RISCV::TrapCause::SUPERVISOR_SOFTWARE_INTERRUPT)) {
-        return RISCV::TrapCause::SUPERVISOR_SOFTWARE_INTERRUPT;
-    } else if (interruptsToService & (1 << RISCV::TrapCause::SUPERVISOR_TIMER_INTERRUPT)) {
-        return RISCV::TrapCause::SUPERVISOR_TIMER_INTERRUPT;
-    } else if (interruptsToService & (1 << RISCV::TrapCause::USER_EXTERNAL_INTERRUPT)) {
-        return RISCV::TrapCause::USER_EXTERNAL_INTERRUPT;
-    } else if (interruptsToService & (1 << RISCV::TrapCause::USER_SOFTWARE_INTERRUPT)) {
-        return RISCV::TrapCause::USER_SOFTWARE_INTERRUPT;
-    } else if (interruptsToService & (1 << RISCV::TrapCause::USER_TIMER_INTERRUPT)) {
-        return RISCV::TrapCause::USER_TIMER_INTERRUPT;
+    if (interruptsToService & (1 << TrapCause::MACHINE_EXTERNAL_INTERRUPT)) {
+        return TrapCause::MACHINE_EXTERNAL_INTERRUPT;
+    } else if (interruptsToService & (1 << TrapCause::MACHINE_SOFTWARE_INTERRUPT)) {
+        return TrapCause::MACHINE_SOFTWARE_INTERRUPT;
+    } else if (interruptsToService & (1 << TrapCause::MACHINE_TIMER_INTERRUPT)) {
+        return TrapCause::MACHINE_TIMER_INTERRUPT;
+    } else if (interruptsToService & (1 << TrapCause::SUPERVISOR_EXTERNAL_INTERRUPT)) {
+        return TrapCause::SUPERVISOR_EXTERNAL_INTERRUPT;
+    } else if (interruptsToService & (1 << TrapCause::SUPERVISOR_SOFTWARE_INTERRUPT)) {
+        return TrapCause::SUPERVISOR_SOFTWARE_INTERRUPT;
+    } else if (interruptsToService & (1 << TrapCause::SUPERVISOR_TIMER_INTERRUPT)) {
+        return TrapCause::SUPERVISOR_TIMER_INTERRUPT;
+    } else if (interruptsToService & (1 << TrapCause::USER_EXTERNAL_INTERRUPT)) {
+        return TrapCause::USER_EXTERNAL_INTERRUPT;
+    } else if (interruptsToService & (1 << TrapCause::USER_SOFTWARE_INTERRUPT)) {
+        return TrapCause::USER_SOFTWARE_INTERRUPT;
+    } else if (interruptsToService & (1 << TrapCause::USER_TIMER_INTERRUPT)) {
+        return TrapCause::USER_TIMER_INTERRUPT;
     } else {
         // This indicates custom interrupts... TODO ?
-        return RISCV::TrapCause::NONE;
+        return TrapCause::NONE;
     }
 }
 
 // TODO comment for what this section of the spec-knowledge is. In general I need to sort this doc...
 
 struct misaReg {
-    RISCV::XlenMode mxlen;
+
+    XlenMode mxlen;
     __uint32_t extensions;
+    const __uint32_t maximalExtensions;
+
+    misaReg(__uint32_t maximalExtensions) :
+        maximalExtensions(maximalExtensions) { }
+
+    template <typename XLEN_t>
+    void Write(XLEN_t value) {
+        unsigned int shift = (sizeof(XLEN_t)*8)-2;
+        extensions = value & 0x3ffffff & maximalExtensions;
+        mxlen = (RISCV::XlenMode)(value >> shift);
+    }
+
+    template <typename XLEN_t>
+    XLEN_t Read() {
+        unsigned int shift = (sizeof(XLEN_t)*8)-2;
+        return (((XLEN_t)mxlen) << shift) | extensions;
+    }
+
+    template <typename MXLEN_t>
+    void Reset() {
+        mxlen = xlenTypeToMode<MXLEN_t>();
+        extensions = maximalExtensions;
+    }
 };
 
 struct mstatusReg {
+
+    constexpr static __uint32_t uieMask  = 0b00000000000000000000001;
+    constexpr static __uint32_t sieMask  = 0b00000000000000000000010;
+    constexpr static __uint32_t mieMask  = 0b00000000000000000001000;
+    constexpr static __uint32_t upieMask = 0b00000000000000000010000;
+    constexpr static __uint32_t spieMask = 0b00000000000000000100000;
+    constexpr static __uint32_t mpieMask = 0b00000000000000010000000;
+    constexpr static __uint32_t sppMask  = 0b00000000000000100000000;
+    constexpr static __uint32_t mppMask  = 0b00000000001100000000000;
+    constexpr static __uint32_t fsMask   = 0b00000000110000000000000;
+    constexpr static __uint32_t xsMask   = 0b00000011000000000000000;
+    constexpr static __uint32_t mprvMask = 0b00000100000000000000000;
+    constexpr static __uint32_t sumMask  = 0b00001000000000000000000;
+    constexpr static __uint32_t mxrMask  = 0b00010000000000000000000;
+    constexpr static __uint32_t tvmMask  = 0b00100000000000000000000;
+    constexpr static __uint32_t twMask   = 0b01000000000000000000000;
+    constexpr static __uint32_t tsrMask  = 0b10000000000000000000000;
+    constexpr static __uint32_t sdMask32 = 0x80000000;
+    constexpr static __uint64_t sdMask64 = 0x8000000000000000;
+    constexpr static __uint64_t uxlMask  = 0x300000000;
+    constexpr static __uint64_t sxlMask  = 0xC00000000;
+    // constexpr static __uint128_t sdMask128 = 0x80000000000000000000000000000000;
+    constexpr static __uint32_t sppShift = 8;
+    constexpr static __uint32_t mppShift = 11;
+    constexpr static __uint32_t fsShift  = 13;
+    constexpr static __uint32_t xsShift  = 15;
+    constexpr static __uint32_t uxlShift = 32;
+    constexpr static __uint32_t sxlShift = 34;
+
+    // TODO accessor pattern and option to store as packed form instead?
     bool uie, sie, mie, upie, spie, mpie;
-    RISCV::PrivilegeMode spp, mpp;
-    RISCV::FloatingPointState fs;
-    RISCV::ExtensionState xs;
+    PrivilegeMode spp, mpp;
+    FloatingPointState fs;
+    ExtensionState xs;
     bool mprv, sum, mxr, tvm, tw, tsr;
-    RISCV::XlenMode sxl, uxl;
+    XlenMode sxl, uxl;
     bool sd;
+
+    template <typename XLEN_t, PrivilegeMode viewPrivilege>
+    inline void Write(XLEN_t value) {
+        uie = uieMask & value;
+        upie = upieMask & value;
+        if constexpr (viewPrivilege != PrivilegeMode::User) {
+            sie = sieMask & value;
+            spie = spieMask & value;
+            spp = (PrivilegeMode)((sppMask & value) >> sppShift);
+            fs = (FloatingPointState)((fsMask & value) >> fsShift);
+            xs = (ExtensionState)((xsMask & value) >> xsShift);
+            sum = sumMask & value;
+            mxr = mxrMask & value;
+            if constexpr (std::is_same<XLEN_t, __uint32_t>()) {
+                sd = value & sdMask32;
+            } else {
+                sd = value & sdMask64;
+            } // TODO, bug, 128-bit sd mask is 1<<127, hard to express
+        }
+        if constexpr (viewPrivilege == PrivilegeMode::Machine) {
+            mie = mieMask & value;
+            mpie = mpieMask & value;
+            mpp = (PrivilegeMode)((mppMask & value) >> mppShift);
+            if constexpr (std::is_same<XLEN_t, __uint32_t>()) {
+                uxl = XlenMode::XL32;
+                sxl = XlenMode::XL32;
+            } else {
+                uxl = (XlenMode)((uxlMask & value) >> uxlShift);
+                sxl = (XlenMode)((sxlMask & value) >> sxlShift);
+            }
+            mprv = mprvMask & value;
+            tvm = tvmMask & value;
+            tw = twMask & value;
+            tsr = tsrMask & value;
+        }
+    }
+
+    template <typename XLEN_t, PrivilegeMode viewPrivilege>
+    inline XLEN_t Read() {
+        XLEN_t value = 0;
+        value |= uie ? uieMask : 0;
+        value |= upie ? upieMask : 0;
+        if constexpr (viewPrivilege != PrivilegeMode::User) {
+            value |= sie ? sieMask : 0;
+            value |= spie ? spieMask : 0;
+            value |= spp << sppShift;
+            value |= fs << fsShift;
+            value |= xs << xsShift;
+            value |= sum ? sumMask : 0;
+            value |= mxr ? mxrMask : 0;
+            if constexpr (std::is_same<XLEN_t, __uint32_t>()) {
+                value |= sd ? sdMask32 : 0;
+            } else {
+                value |= sd ? sdMask64 : 0;
+            } // TODO 128
+        }
+        if constexpr (viewPrivilege == PrivilegeMode::Machine) {
+            value |= mie ? mieMask : 0;
+            value |= mpie ? mpieMask : 0;
+            value |= mpp << mppShift;
+            if constexpr (!std::is_same<XLEN_t, __uint32_t>()) {
+                value |= (__uint64_t)(uxl) << uxlShift;
+                value |= (__uint64_t)(sxl) << sxlShift;
+            }
+            value |= mprv ? mprvMask : 0;
+            value |= tvm ? tvmMask : 0;
+            value |= tw ? twMask : 0;
+            value |= tsr ? tsrMask : 0;
+        }
+        return value;
+    }
+
+    template <typename MXLEN_t>
+    inline void Reset() {
+        mie = false;
+        sie = false;
+        uie = false;
+        mpie = false;
+        spie = false;
+        upie = false;
+        mprv = false;
+        mpp = PrivilegeMode::Machine;
+        spp = PrivilegeMode::Machine;
+        fs = FloatingPointState::Off;
+        xs = ExtensionState::AllOff;
+        mprv = false;
+        sum = false;
+        mxr = false;
+        tvm = false;
+        tw = false;
+        tsr = false;
+        sxl = xlenTypeToMode<MXLEN_t>();
+        uxl = xlenTypeToMode<MXLEN_t>();
+        sd = false;
+    }
 };
 
 struct interruptReg {
+
     bool usi, ssi, msi, uti, sti, mti, uei, sei, mei;
+
+    template<typename XLEN_t, PrivilegeMode viewPrivilege>
+    void Write(XLEN_t value) {
+        usi = usiMask & value;
+        uti = utiMask & value;
+        uei = ueiMask & value;
+        if constexpr (viewPrivilege != PrivilegeMode::User) {
+            ssi = ssiMask & value;
+            sti = stiMask & value;
+            sei = seiMask & value;
+        }
+        if constexpr (viewPrivilege == PrivilegeMode::Machine) {
+            msi = msiMask & value;
+            mti = mtiMask & value;
+            mei = meiMask & value;
+        }
+    }
+
+    template<typename XLEN_t, PrivilegeMode viewPrivilege>
+    XLEN_t Read() {
+        XLEN_t value = 0;
+        value |= usi ? usiMask : 0;
+        value |= uti ? utiMask : 0;
+        value |= uei ? ueiMask : 0;
+        if constexpr (viewPrivilege != PrivilegeMode::User) {
+            value |= ssi ? ssiMask : 0;
+            value |= sti ? stiMask : 0;
+            value |= sei ? seiMask : 0;
+        }
+        if constexpr (viewPrivilege == PrivilegeMode::Machine) {
+            value |= msi ? msiMask : 0;
+            value |= mti ? mtiMask : 0;
+            value |= mei ? meiMask : 0;
+        }
+        return value;
+    }
+
+    void Reset() {
+        usi = false;
+        ssi = false;
+        msi = false;
+        uti = false;
+        sti = false;
+        mti = false;
+        uei = false;
+        sei = false;
+        mei = false;
+    }
 };
 
 template<typename XLEN_t>
 struct tvecReg {
     XLEN_t base;
-    RISCV::tvecMode mode;
+    tvecMode mode;
+    void Reset() {
+        base = 0;
+        mode = tvecMode::Direct;
+    }
+
+    void Write(XLEN_t value) {
+        base = value & RISCV::tvecBaseMask;
+        mode = (RISCV::tvecMode)(value & RISCV::tvecModeMask);
+    }
+
+    XLEN_t Read() {
+        return ((XLEN_t)base) | ((XLEN_t)mode);
+    }
 };
 
 template<typename XLEN_t>
 struct causeReg {
     bool interrupt;
     TrapCause exceptionCode;
+
+    void Reset() {
+        interrupt = false;
+        exceptionCode = TrapCause::NONE;
+    }
+
+    void Write(XLEN_t value) {
+        if constexpr (std::is_same<XLEN_t, __uint32_t>()) {
+            interrupt = value & ((XLEN_t)1 << 31);
+            exceptionCode = (RISCV::TrapCause)(value & ~((XLEN_t)1 << 31));
+        } else {
+            interrupt = value & ((XLEN_t)1 << 63);
+            exceptionCode = (RISCV::TrapCause)(value & ~((XLEN_t)1 << 63));
+        }
+    }
+
+    XLEN_t Read() {
+        XLEN_t value = exceptionCode;
+        if (interrupt) {
+            if constexpr (std::is_same<XLEN_t, __uint32_t>()) {
+                value |= ((XLEN_t)1 << 31);
+            } else {
+                value |= ((XLEN_t)1 << 63);
+            }
+        }
+        return value;
+    }
 };
 
 template<typename XLEN_t>
 struct satpReg {
-    RISCV::PagingMode pagingMode;
+    PagingMode pagingMode;
     XLEN_t ppn;
     XLEN_t asid;
+    void Reset() {
+        pagingMode = PagingMode::Bare;
+        ppn = 0;
+        asid = 0;
+    }
+
+    void Write(XLEN_t value) {
+        if constexpr (!std::is_same<XLEN_t, __uint32_t>()) {
+            pagingMode = (RISCV::PagingMode)((value >> 60) & 0x0f);
+            asid = (value >> 44) & 0x0fffff;
+            ppn = value & 0x0fffffffffff;
+        } else {
+            pagingMode = (RISCV::PagingMode)(value >> 31);
+            asid = (value >> 22) & 0x1ff;
+            ppn = value & 0x3fffff;
+        }
+    }
+
+    XLEN_t Read() {
+        if constexpr (std::is_same<XLEN_t, __uint32_t>()) {
+            return ((pagingMode & 0x000001) << 31)|
+                        (( asid & 0x0001ff) << 22)|
+                        ((  ppn & 0x3fffff) << 00);
+        } else {
+            return (((__uint64_t)pagingMode & 0x0000000000f) << 60)|
+                         (((__uint64_t)asid & 0x0000000ffff) << 44)|
+                          (((__uint64_t)ppn & 0xfffffffffff) << 00);
+        }
+    }
 };
 
 struct fcsrReg {
-    RISCV::fpRoundingMode frm;
+    fpRoundingMode frm;
     struct {
         bool nx, uf, of, dz, nv;
     } fflags;
+    void Reset() {
+        frm = fpRoundingMode::RNE;
+        fflags.nx = false;
+        fflags.uf = false;
+        fflags.of = false;
+        fflags.dz = false;
+        fflags.nv = false;
+    }
+    // TODO R/W
 };
 
 struct pmpEntry {
     bool r, w, x, locked;
-    RISCV::pmpAddressMode aMode;
+    pmpAddressMode aMode;
     __uint64_t address;
 } pmpentry[16];
 
