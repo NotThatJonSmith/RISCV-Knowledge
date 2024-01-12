@@ -458,8 +458,14 @@ enum MinorOpcode {
     // OP
     ADD = 0, SLL = 1, SLT = 2, SLTU = 3, XOR = 4, SRL = 5, OR = 6, AND = 7, SUB = 256, SRA = 261,
 
+    // OP-32
+    ADDW = 0, SLLW = 1, SRLW = 5, SUBW = 256, SRAW = 261,
+
     // OP-IMM
     ADDI = 0, SLLI = 1, SLTI = 2, SLTIU = 3, XORI = 4, SRI = 5, ORI = 6, ANDI = 7,
+
+    // OP-IMM-32
+    ADDIW = 0, SLLIW = 1, SRIW = 5,
 
     // MULDIV
     MUL = 8, MULH = 9, MULHSU = 10, MULHU = 11, DIV = 12, DIVU = 13, REM = 14, REMU = 15,
@@ -468,10 +474,10 @@ enum MinorOpcode {
     BEQ = 0, BNE = 1, BLT = 4, BGE = 5, BLTU = 6, BGEU = 7,
 
     // LOAD
-    LB = 0, LH = 1, LW = 2, LBU = 4, LHU = 5,
+    LB = 0, LH = 1, LW = 2, LD = 3, LBU = 4, LHU = 5, LWU = 6,
 
     // STORE
-    SB = 0, SH = 1, SW = 2,
+    SB = 0, SH = 1, SW = 2, SD = 3,
 
     // SYSTEM
     PRIV = 0, CSRRW = 1, CSRRS = 2, CSRRC = 3, CSRRWI = 5, CSRRSI = 6, CSRRCI = 7,
@@ -487,6 +493,9 @@ enum SubMinorOpcode {
 
     // OP-IMM / SRI
     SRLI = 0b0000000, SRAI = 0b0100000,
+
+    // OP-IMM-32 / SRIW
+    SRLIW = 0b0000000, SRAIW = 0b0100000,
 
     // SYSTEM / PRIV
     ECALL_EBREAK_URET = 0, SRET_WFI = 8, MRET = 24, SFENCE_VMA = 9
