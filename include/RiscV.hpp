@@ -357,14 +357,6 @@ inline std::string trapName(bool interrupt, TrapCause trapCause) {
 
 }
 
-inline std::string xlenModeName(XlenMode xlenMode) {
-    if (xlenMode == XlenMode::XL32)
-        return "32";
-    if (xlenMode == XlenMode::XL64)
-        return "64";
-    return "128";
-}
-
 inline std::string privilegeModeName(PrivilegeMode privilegeMode) {
     if (privilegeMode == PrivilegeMode::Machine)
         return "Machine";
@@ -421,6 +413,25 @@ constexpr inline bool vectorHasExtension(__uint32_t vector, char extension) {
     return vector & (1 <<  (extension - 'A'));
 }
 
+constexpr inline const char * xlenModeName(XlenMode xlenMode) {
+    if (xlenMode == XlenMode::XL32)
+        return "32";
+    if (xlenMode == XlenMode::XL64)
+        return "64";
+    return "128";
+}
+
+inline XlenMode xlenNameToMode(std::string xlenName) {
+    if (xlenName.compare("32") == 0 || xlenName.compare("XL32") == 0) {
+        return XlenMode::XL32;
+    } else if (xlenName.compare("64") == 0 || xlenName.compare("XL64") == 0) {
+        return XlenMode::XL64;
+    } else if (xlenName.compare("128") == 0 || xlenName.compare("XL128") == 0) {
+        return XlenMode::XL128;
+    }
+    return XlenMode::None;
+}
+
 template<typename XLEN_t>
 constexpr XlenMode xlenTypeToMode() {
     if (std::is_same<XLEN_t, __uint32_t>())
@@ -431,6 +442,13 @@ constexpr XlenMode xlenTypeToMode() {
         return XlenMode::XL128;
     return XlenMode::None;
 }
+
+template <XlenMode xlen> struct XlenModeToType;
+template <> struct XlenModeToType<XlenMode::XL32> { using type = __uint32_t; };
+template <> struct XlenModeToType<XlenMode::XL64> { using type = __uint64_t; };
+template <> struct XlenModeToType<XlenMode::XL128> { using type = __uint128_t; };
+
+// TODO the direct name <-> type leg of this triangle
 
 // -- Facts about RISC-V instruction encodings --
 
